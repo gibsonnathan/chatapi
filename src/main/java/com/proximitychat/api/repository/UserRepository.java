@@ -2,28 +2,20 @@ package com.proximitychat.api.repository;
 
 import com.proximitychat.api.domain.User;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public class UserRepository {
 
-  private final Map<Long, User> users = new HashMap<>();
+  private final Map<String, User> usersByUsername = new HashMap<>();
 
-  public User get(Long id) {
-    return users.get(id);
+  public Optional<User> get(String username) {
+    return Optional.ofNullable(usersByUsername.get(username));
   }
 
-  public List<User> getAll() {
-    return users.values().stream().toList();
-  }
-
-  public void add(User user) {
-    users.put(user.getId(), user);
-  }
-
-  public User remove(User user) {
-    return users.remove(user.getId());
+  public void put(User user) {
+    usersByUsername.put(user.getUsername(), user);
   }
 }

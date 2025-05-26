@@ -31,11 +31,16 @@ public class Room {
   }
 
   public boolean addUser(User user) {
-    return users.add(user);
+    if (!users.contains(user)) {
+      users.add(user);
+      return true;
+    }
+    return false;
   }
 
   public void removeUser(User user) {
-    this.users = users.stream().filter(us -> us.getId() == user.getId()).toList();
+    this.users = users.stream().filter(us -> us.getId() != user.getId()).toList();
+    user.setRoomId(null);
   }
 
   public List<User> getUsers() {

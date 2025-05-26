@@ -1,22 +1,28 @@
 package com.proximitychat.api.domain;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.web.socket.WebSocketSession;
 
-@Data
+@Getter
+@EqualsAndHashCode
 public class User {
   private static long nextId = 1;
 
-  private long id;
-  private WebSocketSession session;
-  private String latitude;
-  private String longitude;
-  private Long roomId;
+  private final long id;
+  private final String username;
+  @Setter private WebSocketSession session;
+  @Setter private String latitude;
+  @Setter private String longitude;
+  @Setter private Long roomId;
 
-  public User(WebSocketSession session, String latitude, String longitude) {
+  public User(String username) {
     this.id = nextId++;
-    this.session = session;
-    this.latitude = latitude;
-    this.longitude = longitude;
+    this.username = username;
+  }
+
+  public boolean hasRoom() {
+    return roomId == null;
   }
 }

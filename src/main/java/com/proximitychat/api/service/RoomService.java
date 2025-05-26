@@ -9,7 +9,7 @@ public class RoomService {
 
   private final RoomRepository roomRepository;
 
-  private Room globalRoom = new Room("32.4673 N", "84.9920 W");
+  private final Room globalRoom = new Room("32.4673 N", "84.9920 W");
 
   public RoomService(RoomRepository roomRepository) {
     this.roomRepository = roomRepository;
