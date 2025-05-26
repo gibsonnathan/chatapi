@@ -22,17 +22,21 @@ public class ChatController {
 
   @PostMapping("/register")
   public RegisterResponse register(@RequestBody RegisterRequest request) {
+    RegisterResponse response = new RegisterResponse();
+
     String username = request.getUsername();
     Optional<User> optionalUser = userRepository.get(username);
 
-    if (optionalUser.isEmpty()) {
-      User user = new User(username);
-      userRepository.put(user);
+    if (optionalUser.isPresent()) {
+      response.setError("Username already exists.");
+      response.setSuccessful(false);
     }
 
-    RegisterResponse response = new RegisterResponse();
+    User user = new User(username);
+    userRepository.put(user);
     response.setError(null);
     response.setSuccessful(true);
+
     return response;
   }
 }
