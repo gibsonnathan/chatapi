@@ -38,7 +38,7 @@ public class WsHandler extends TextWebSocketHandler {
 
     String type = message.get("type");
 
-    Map<String, String> response =
+    Map<String, Object> response =
         switch (type) {
           case "JOIN" -> messageService.handleJoinMessage(message, session);
           case "SEND" -> messageService.handleSendMessage(message);

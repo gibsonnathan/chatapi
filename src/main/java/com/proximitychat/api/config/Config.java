@@ -1,21 +1,29 @@
 package com.proximitychat.api.config;
 
-import com.proximitychat.api.handler.WsHandler;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.*;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSocket
-public class Config implements WebSocketConfigurer {
+@EnableWebSecurity
+public class Config {
 
-  private final WsHandler wsHandler;
-
-  public Config(WsHandler wsHandler) {
-    this.wsHandler = wsHandler;
+  @Bean
+  public PasswordEncoder passwordEncoder() {
+    return new BCryptPasswordEncoder();
   }
 
-  @Override
-  public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-    registry.addHandler(wsHandler, "/chat").setAllowedOrigins("*");
+  @Bean
+  public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http.authorizeHttpRequests(authorize -> authorize.requestMatchers("/**").permitAll())
+        .csrf(csrf -> csrf.disable())
+        .formLogin(form -> form.disable())
+        .httpBasic(httpBasic -> httpBasic.disable());
+
+    return http.build();
   }
 }

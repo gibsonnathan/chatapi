@@ -1,9 +1,9 @@
 package com.proximitychat.api.service;
 
-import com.proximitychat.api.domain.User;
+import com.proximitychat.api.domain.Error;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -16,31 +16,35 @@ public class MessageService {
     this.chatService = chatService;
   }
 
-  public Map<String, String> handleJoinMessage(
+  public Map<String, Object> handleJoinMessage(
       Map<String, String> message, WebSocketSession session) {
     String username = message.get("username");
+    String password = message.get("password");
     String latitude = message.get("latitude");
     String longitude = message.get("longitude");
-    Optional<User> optionalUser = chatService.joinChat(username, latitude, longitude, session);
-    Map<String, String> response = new HashMap<>();
-    response.put("status", optionalUser.isPresent() ? "SUCCESS" : "FAILURE");
+    List<Error> errors = chatService.joinChat(username, password, latitude, longitude, session);
+    Map<String, Object> response = new HashMap<>();
+    response.put("status", errors.isEmpty() ? "SUCCESS" : "FAILURE");
+    response.put("errors", errors);
     return response;
   }
 
-  public Map<String, String> handleSendMessage(Map<String, String> message) {
+  public Map<String, Object> handleSendMessage(Map<String, String> message) {
     String username = message.get("username");
     String content = message.get("content");
-    boolean success = chatService.sendMessage(username, content);
-    Map<String, String> response = new HashMap<>();
-    response.put("status", success ? "SUCCESS" : "FAILURE");
+    List<Error> errors = chatService.sendMessage(username, content);
+    Map<String, Object> response = new HashMap<>();
+    response.put("status", errors.isEmpty() ? "SUCCESS" : "FAILURE");
+    response.put("errors", errors);
     return response;
   }
 
-  public Map<String, String> handleLeaveMessage(Map<String, String> message) {
+  public Map<String, Object> handleLeaveMessage(Map<String, String> message) {
     String username = message.get("username");
-    boolean success = chatService.leave(username);
-    Map<String, String> response = new HashMap<>();
-    response.put("status", success ? "SUCCESS" : "FAILURE");
+    List<Error> errors = chatService.leave(username);
+    Map<String, Object> response = new HashMap<>();
+    response.put("status", errors.isEmpty() ? "SUCCESS" : "FAILURE");
+    response.put("errors", errors);
     return response;
   }
 }

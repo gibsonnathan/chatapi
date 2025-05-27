@@ -16,6 +16,7 @@ public class User {
   @Setter private String latitude;
   @Setter private String longitude;
   @Setter private Long roomId;
+  @Setter private String passwordHash;
 
   public User(String username) {
     this.id = nextId++;

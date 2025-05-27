@@ -1,11 +1,15 @@
 package com.proximitychat.api.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.proximitychat.api.domain.Error;
 import com.proximitychat.api.domain.Room;
 import com.proximitychat.api.domain.User;
 import com.proximitychat.api.repository.UserRepository;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -16,23 +20,40 @@ public class ChatService {
   private final RoomService roomService;
   private final UserRepository userRepository;
   private final ObjectMapper objectMapper;
+  private final PasswordEncoder passwordEncoder;
 
   public ChatService(
-      RoomService roomService, UserRepository userRepository, ObjectMapper objectMapper) {
+      RoomService roomService,
+      UserRepository userRepository,
+      ObjectMapper objectMapper,
+      PasswordEncoder passwordEncoder) {
     this.roomService = roomService;
     this.userRepository = userRepository;
     this.objectMapper = objectMapper;
+    this.passwordEncoder = passwordEncoder;
   }
 
-  public Optional<User> joinChat(
-      String username, String latitude, String longitude, WebSocketSession session) {
+  public List<com.proximitychat.api.domain.Error> joinChat(
+      String username,
+      String password,
+      String latitude,
+      String longitude,
+      WebSocketSession session) {
     Optional<User> optionalUser = userRepository.get(username);
+    List<Error> errors = new ArrayList<>();
 
     if (optionalUser.isEmpty()) {
-      return Optional.empty();
+      errors.add(new Error("User does not exist."));
+      return errors;
     }
 
     User user = optionalUser.get();
+
+    if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+      errors.add(new Error("Wrong password."));
+      return errors;
+    }
+
     user.setLatitude(latitude);
     user.setLongitude(longitude);
     user.setSession(session);
@@ -44,21 +65,24 @@ public class ChatService {
     user.setRoomId(newRoom.getId());
     newRoom.addUser(user);
     userRepository.put(user);
-    return Optional.of(user);
+    return errors;
   }
 
-  public boolean sendMessage(String username, String content) {
+  public List<com.proximitychat.api.domain.Error> sendMessage(String username, String content) {
+    List<Error> errors = new ArrayList<>();
     Optional<User> optionalUser = userRepository.get(username);
 
     if (optionalUser.isEmpty()) {
-      return false;
+      errors.add(new Error("User does not exist."));
+      return errors;
     }
 
     User user = optionalUser.get();
     Long roomId = user.getRoomId();
 
     if (roomId == null) {
-      return false;
+      errors.add(new Error("User's room is null."));
+      return errors;
     }
 
     Room room = roomService.getRoom(roomId);
@@ -66,25 +90,29 @@ public class ChatService {
       room.send(objectMapper, content);
     } catch (Exception e) {
       log.debug("Caught while sending message", e);
-      return false;
+      errors.add(new Error("Failed to send message."));
+      return errors;
     }
 
-    return true;
+    return errors;
   }
 
-  public boolean leave(String username) {
+  public List<com.proximitychat.api.domain.Error> leave(String username) {
+    List<Error> errors = new ArrayList<>();
     Optional<User> optionalUser = userRepository.get(username);
     if (optionalUser.isEmpty()) {
-      return false;
+      errors.add(new Error("User does not exist."));
+      return errors;
     }
     User user = optionalUser.get();
     Long roomId = user.getRoomId();
     if (roomId == null) {
-      return false;
+      errors.add(new Error("User's room is null."));
+      return errors;
     }
     Room room = roomService.getRoom(roomId);
     room.removeUser(user);
     userRepository.put(user);
-    return true;
+    return errors;
   }
 }
